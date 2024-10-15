@@ -146,7 +146,6 @@ class _FullScreenCarouselState extends State<FullScreenCarousel> {
               ),
             ),
           ),
-          // TODO: maybe show a list of thumbnails at the bottom so the user que see an jump to the image he wants
         ],
       ),
     );
