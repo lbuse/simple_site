@@ -31,7 +31,7 @@ class _HomeState extends State<Home> {
         'https://picsum.photos/${Random().nextInt(2000) + 600}/${Random().nextInt(2000) + 400}?random=0',
   );
   static const double itemWidth = 400.0;
-  static const double itemHeight = 280.0;
+  // static const double itemHeight = 280.0;
 
   @override
   void initState() {
@@ -112,9 +112,13 @@ class _HomeState extends State<Home> {
                   padding: const EdgeInsets.all(4.0),
                   child: ClipRRect(
                     borderRadius: const BorderRadius.all(Radius.circular(8.0)),
-                    child: ImageDetails(
-                      images[index],
-                      fit: BoxFit.cover,
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: ImageDetails(
+                        images[index],
+                        desiredSize: Size(double.infinity, double.infinity),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),

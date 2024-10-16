@@ -20,6 +20,7 @@ class FullScreenCarousel extends StatefulWidget {
 
 class _FullScreenCarouselState extends State<FullScreenCarousel> {
   late final CarouselController carouselController;
+  int _reloadAttempt = 0;
 
   @override
   void initState() {
@@ -67,7 +68,9 @@ class _FullScreenCarouselState extends State<FullScreenCarousel> {
                         ),
                         const SizedBox(height: 16),
                         TextButton(
-                          onPressed: () => setState(() {}),
+                          onPressed: () => setState(() {
+                            _reloadAttempt++;
+                          }),
                           child: const Text('Recarregar'),
                         ),
                       ],

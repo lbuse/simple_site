@@ -4,9 +4,15 @@ import 'package:flutter/material.dart';
 import '../../../core/widgets/skeleton_loader.dart';
 
 class ImageDetails extends StatefulWidget {
-  const ImageDetails(this.imageUrl, {super.key, this.fit = BoxFit.contain});
+  const ImageDetails(
+    this.imageUrl, {
+    super.key,
+    this.desiredSize,
+    this.fit = BoxFit.contain,
+  });
 
   final String? imageUrl;
+  final Size? desiredSize;
   final BoxFit fit;
 
   @override
@@ -17,6 +23,7 @@ class _ImageDetailsState extends State<ImageDetails> {
   final key = GlobalKey();
   // NOTE: Useful when the request can use the space available to get images with the right size
   final ValueNotifier<Size> size = ValueNotifier(const Size(0, 0));
+  int _reloadAttempt = 0;
 
   @override
   void initState() {
@@ -45,7 +52,8 @@ class _ImageDetailsState extends State<ImageDetails> {
           child = CachedNetworkImage(
             imageUrl: widget.imageUrl!,
             fit: widget.fit,
-            width: double.infinity,
+            width: widget.desiredSize?.width,
+            height: widget.desiredSize?.height,
             fadeInDuration: kThemeAnimationDuration,
             fadeOutDuration: kThemeAnimationDuration,
             placeholder: (_, __) => const SkeletonLoading(
@@ -68,7 +76,9 @@ class _ImageDetailsState extends State<ImageDetails> {
                 const SizedBox(height: 16),
                 TextButton.icon(
                   onPressed: () {
-                    setState(() {});
+                    setState(() {
+                      _reloadAttempt++;
+                    });
                   },
                   label: const Text("Tentar novamente"),
                   icon: const Icon(Icons.refresh),
