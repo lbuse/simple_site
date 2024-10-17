@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/helpers/assets.dart';
 import '../../../../core/helpers/layout_helpers.dart';
-import '../../../image_details/presentation/image_details.dart';
+import '../../../image_details/presentation/image_loader.dart';
 import '../../../settings/settings_controller.dart';
+import '../../domain/entities/item.dart';
 import '../../domain/entities/selected_image.dart';
 import '../states/side_bar_state.dart';
 
@@ -11,13 +12,13 @@ class SideBar extends StatefulWidget {
   const SideBar({
     super.key,
     required this.settingsController,
-    required this.imagesUrls,
+    required this.items,
     this.onDockedChange,
     this.onTap,
   });
 
   final SettingsController settingsController;
-  final List<String> imagesUrls;
+  final List<Item> items;
   final ValueChanged<bool>? onDockedChange;
   final ValueChanged<SelectedImage>? onTap;
 
@@ -35,17 +36,19 @@ class _SideBarState extends State<SideBar> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       state.updateSelectedIndex(0);
-      widget.onTap!(SelectedImage(0, widget.imagesUrls[0]));
+      widget.onTap!(SelectedImage(0, widget.items[0]));
     });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final screenSize = MediaQuery.of(context).size;
-    state.togglePinByScreenSize(
-      getResponsiveLayout(screenSize.width) == DeviceLayout.desktop,
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final screenSize = MediaQuery.of(context).size;
+      state.togglePinByScreenSize(
+        getResponsiveLayout(screenSize.width) == DeviceLayout.desktop,
+      );
+    });
   }
 
   @override
@@ -91,7 +94,7 @@ class _SideBarState extends State<SideBar> {
             child: Column(
               children: [
                 _buildHeader(logoPadding, isExpanded, theme),
-                Expanded(child: _buildList()),
+                Expanded(child: _buildList(isExpanded)),
               ],
             ),
           ),
@@ -179,21 +182,21 @@ class _SideBarState extends State<SideBar> {
     );
   }
 
-  Widget _buildList() {
+  Widget _buildList(bool isExpanded) {
     final theme = Theme.of(context);
 
     return ListView.builder(
       padding: const EdgeInsets.all(8),
-      itemCount: widget.imagesUrls.length,
+      itemCount: widget.items.length,
       itemBuilder: (_, int index) {
-        String url = widget.imagesUrls[index];
+        final item = widget.items[index];
         return Padding(
           padding: const EdgeInsets.only(bottom: 8.0),
           child: InkWell(
             onTap: widget.onTap != null
                 ? () {
                     state.updateSelectedIndex(index);
-                    widget.onTap!(SelectedImage(index, url));
+                    widget.onTap!(SelectedImage(index, item));
                   }
                 : null,
             onHover: (isHovered) =>
@@ -216,7 +219,19 @@ class _SideBarState extends State<SideBar> {
                     ),
                     borderRadius: BorderRadius.circular(8.0),
                   ),
-                  child: ImageDetails(url),
+                  child: AnimatedContainer(
+                    duration: kThemeAnimationDuration,
+                    constraints: BoxConstraints(
+                      minHeight: 40.0,
+                      maxHeight: isExpanded ? 160.0 : 80.0,
+                    ),
+                    child: ImageLoader(
+                      item.imageUrl,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 );
               },
             ),

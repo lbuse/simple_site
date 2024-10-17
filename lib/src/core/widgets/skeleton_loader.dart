@@ -134,12 +134,14 @@ class _SkeletonLoadingState extends State<SkeletonLoading>
 class SkeletonContainer extends StatelessWidget {
   const SkeletonContainer({
     super.key,
-    this.size,
+    this.width,
+    this.height,
     this.margin = EdgeInsets.zero,
     this.borderRadius = const BorderRadius.all(Radius.circular(4)),
   });
 
-  final Size? size;
+  final double? width;
+  final double? height;
   final EdgeInsets margin;
   final BorderRadius borderRadius;
 
@@ -147,8 +149,8 @@ class SkeletonContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: margin,
-      width: size?.width,
-      height: size?.height,
+      width: width,
+      height: height,
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.3),
         borderRadius: borderRadius,

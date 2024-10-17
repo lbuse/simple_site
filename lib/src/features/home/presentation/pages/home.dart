@@ -1,15 +1,18 @@
 import 'dart:math';
 
 import 'package:animations/animations.dart';
+import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_lorem/flutter_lorem.dart';
 import 'package:get_it/get_it.dart';
 
 import '../../../../core/helpers/assets.dart';
 import '../../../../core/helpers/layout_helpers.dart';
 import '../../../image_details/presentation/image_details.dart';
+import '../../../image_details/presentation/image_resumed.dart';
 import '../../../settings/settings_controller.dart';
+import '../../domain/entities/item.dart';
 import '../../domain/entities/selected_image.dart';
-import '../widgets/full_screen_carousel.dart';
 import '../widgets/side_bar.dart';
 
 class Home extends StatefulWidget {
@@ -24,18 +27,27 @@ class _HomeState extends State<Home> {
   final sideBarKey = GlobalKey();
   final ValueNotifier<bool> _isDocked = ValueNotifier(false);
   final ValueNotifier<double> collapsedSideBarWidth = ValueNotifier(0.0);
-  final selectedImage = ValueNotifier<SelectedImage?>(null);
+  late final ValueNotifier<SelectedImage> selectedImage;
   final images = List.generate(
     Random().nextInt(10) + 2,
-    (index) =>
-        'https://picsum.photos/${Random().nextInt(2000) + 600}/${Random().nextInt(2000) + 400}?random=0',
+    (index) {
+      final randomWord = WordPair.random();
+      return Item(
+        title: '${randomWord.first} ${randomWord.second}',
+        description: lorem(paragraphs: Random().nextInt(3) + 1, words: 60),
+        imageUrl:
+            'https://picsum.photos/${Random().nextInt(2000) + 600}/${Random().nextInt(2000) + 400}?random=0',
+      );
+    },
   );
-  static const double itemWidth = 400.0;
+  static const double itemWidth = 600.0;
   // static const double itemHeight = 280.0;
 
   @override
   void initState() {
     super.initState();
+    selectedImage = ValueNotifier(SelectedImage(0, images[0]));
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final context = sideBarKey.currentContext;
       if (context != null) {
@@ -97,30 +109,16 @@ class _HomeState extends State<Home> {
             ),
             itemCount: images.length,
             itemBuilder: (_, index) {
+              final item = images[index];
               return OpenContainer(
                 closedColor: Colors.transparent,
                 middleColor: Colors.transparent,
                 openColor: Colors.transparent,
-                closedShape: const ContinuousRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(16.0)),
-                ),
-                openBuilder: (_, __) => FullScreenCarousel(
-                  imagesUrls: images,
-                  initialIndex: index,
-                ),
-                closedBuilder: (_, __) => Padding(
-                  padding: const EdgeInsets.all(4.0),
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.circular(8.0)),
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: ImageDetails(
-                        images[index],
-                        desiredSize: Size(double.infinity, double.infinity),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
+                closedElevation: 0,
+                openBuilder: (_, __) => ImageDetails(item),
+                closedBuilder: (_, __) => MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: ImageResumed(item),
                 ),
               );
             },
@@ -134,7 +132,7 @@ class _HomeState extends State<Home> {
     final sidebar = SideBar(
       key: sideBarKey,
       settingsController: settingsController,
-      imagesUrls: images,
+      items: images,
       onDockedChange: (isDocked) => _isDocked.value = isDocked,
       onTap: (value) => selectedImage.value = value,
     );
@@ -142,49 +140,31 @@ class _HomeState extends State<Home> {
     final mainView = Center(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ClipRRect(
-            borderRadius: BorderRadius.circular(16.0),
-            child: ValueListenableBuilder(
-              valueListenable: selectedImage,
-              builder: (_, image, __) => ImageDetails(image?.url),
-            )),
+        child: ValueListenableBuilder(
+          valueListenable: selectedImage,
+          builder: (_, selectedImage, __) {
+            final item = selectedImage.imageData;
+            return OpenContainer(
+              closedColor: Colors.transparent,
+              middleColor: Colors.transparent,
+              openColor: Colors.transparent,
+              closedElevation: 0,
+              openBuilder: (_, __) => ImageDetails(item),
+              closedBuilder: (_, __) => MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: ImageDetails(item, isRoot: true),
+              ),
+            );
+          },
+        ),
       ),
     );
 
-    return ValueListenableBuilder<bool>(
-      valueListenable: _isDocked,
-      builder: (context, isDocked, child) {
-        return isDocked
-            ? Row(
-                children: [
-                  sidebar,
-                  Expanded(child: mainView),
-                ],
-              )
-            : Stack(
-                children: [
-                  ValueListenableBuilder(
-                    valueListenable: collapsedSideBarWidth,
-                    builder: (_, sideBarWidth, __) {
-                      return AnimatedPositioned(
-                        left: sideBarWidth,
-                        top: 0,
-                        right: 0,
-                        bottom: 0,
-                        duration: kThemeAnimationDuration,
-                        child: mainView,
-                      );
-                    },
-                  ),
-                  Positioned(
-                    left: 0,
-                    top: 0,
-                    bottom: 0,
-                    child: sidebar,
-                  ),
-                ],
-              );
-      },
+    return Row(
+      children: [
+        sidebar,
+        Expanded(child: mainView),
+      ],
     );
   }
 }

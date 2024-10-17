@@ -1,6 +1,8 @@
+import 'item.dart';
+
 final class SelectedImage {
-  SelectedImage(this.index, this.url);
+  SelectedImage(this.index, this.imageData);
 
   final int index;
-  final String url;
+  final Item imageData;
 }
